@@ -1,0 +1,78 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Responses\ApiResponse;
+use App\Services\CvCreationService;
+use Dompdf\Dompdf;
+use Dompdf\Options;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class CvCreationController extends Controller
+{
+    /**
+     * Generate a CV for the authenticated job seeker.
+     */
+    public function generate(Request $request, CvCreationService $service): JsonResponse
+    {
+        $user = $request->user();
+
+        $completeness = $service->checkProfileCompleteness($user);
+
+        if (! $completeness['complete']) {
+            return response()->json([
+                'message' => 'Please complete your profile details before generating an AI CV.',
+                'errors' => [
+                    'profile' => [
+                        'Your profile is missing: '.implode(', ', $completeness['missing']).'.',
+                    ],
+                ],
+            ], 422);
+        }
+
+        $cvText = $service->generateCvForUser($user);
+
+        return ApiResponse::data([
+            'cv' => $cvText,
+        ]);
+    }
+
+    /**
+     * Download the CV as a beautifully formatted PDF.
+     */
+    public function download(Request $request, CvCreationService $service): mixed
+    {
+        $user = $request->user();
+
+        $completeness = $service->checkProfileCompleteness($user);
+
+        if (! $completeness['complete']) {
+            return response()->json([
+                'message' => 'Please complete your profile details before downloading your AI CV.',
+                'errors' => [
+                    'profile' => [
+                        'Your profile is missing: '.implode(', ', $completeness['missing']).'.',
+                    ],
+                ],
+            ], 422);
+        }
+
+        $cvText = $service->generateCvForUser($user);
+        $html = $service->renderCvHtml($cvText, $user);
+
+        $options = new Options;
+        $options->set('isHtml5ParserEnabled', true);
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        return response($dompdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="cv.pdf"',
+        ]);
+    }
+}
