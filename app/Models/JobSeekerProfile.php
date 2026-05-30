@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Storage;
     'linkedin_url',
     'portfolio_url',
     'summary',
+    'job_recommendation',
 ])]
 class JobSeekerProfile extends Model
 {
@@ -25,6 +26,16 @@ class JobSeekerProfile extends Model
     protected $primaryKey = 'user_id';
 
     public $incrementing = false;
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'job_recommendation' => 'array',
+        ];
+    }
 
     /**
      * @return BelongsTo<User, $this>

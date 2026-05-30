@@ -34,8 +34,35 @@ class CvCreationController extends Controller
 
         $cvText = $service->generateCvForUser($user);
 
+        $html = $service->renderCvHtml($cvText, $user);
+
+        $options = new Options;
+        $options->set('isHtml5ParserEnabled', true);
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $pdfOutput = $dompdf->output();
+        $filename = 'ai-cv-'.time().'.pdf';
+        $storedPath = 'profile/cvs/'.$user->id.'/'.$filename;
+
+        \Illuminate\Support\Facades\Storage::disk('public')->put($storedPath, $pdfOutput);
+
+        $profile = $user->jobSeekerProfile()->firstOrCreate(['user_id' => $user->id]);
+        $previousCvPath = $profile->cv_path;
+        $profile->cv_path = $storedPath;
+        $profile->save();
+
+        if (is_string($previousCvPath) && $previousCvPath !== '') {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($previousCvPath);
+            \Illuminate\Support\Facades\Storage::disk('local')->delete($previousCvPath);
+        }
+
         return ApiResponse::data([
             'cv' => $cvText,
+            'cv_url' => $profile->cvPublicUrl(),
         ]);
     }
 

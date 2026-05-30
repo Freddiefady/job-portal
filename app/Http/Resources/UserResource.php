@@ -158,6 +158,10 @@ class UserResource extends JsonResource
                 $this->role === UserRole::JobSeeker,
                 $this->jobSeekerProfile?->summary
             ),
+            'job_recommendation' => $this->when(
+                $this->role === UserRole::JobSeeker,
+                $this->jobSeekerProfile?->job_recommendation
+            ),
         ];
     }
 

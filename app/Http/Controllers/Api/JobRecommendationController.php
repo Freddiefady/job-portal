@@ -33,6 +33,10 @@ class JobRecommendationController extends Controller
             ];
         }, $recommendations);
 
+        $profile = $user->jobSeekerProfile()->firstOrCreate(['user_id' => $user->id]);
+        $profile->job_recommendation = $formatted;
+        $profile->save();
+
         return ApiResponse::data($formatted);
     }
 }
