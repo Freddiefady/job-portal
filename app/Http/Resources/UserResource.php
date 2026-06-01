@@ -36,8 +36,8 @@ class UserResource extends JsonResource
             'created_at' => $this->formatDateTime($this->created_at),
             'updated_at' => $this->formatDateTime($this->updated_at),
             'full_name' => $this->when(
-                $this->role === UserRole::JobSeeker,
-                $this->jobSeekerProfile?->full_name
+                $this->role === UserRole::JobSeeker || $this->role === UserRole::Admin,
+                $this->full_name,
             ),
             'skills' => $this->when(
                 $this->role === UserRole::JobSeeker,
@@ -45,10 +45,14 @@ class UserResource extends JsonResource
                     ->map(fn ($skill): array => [
                         'id' => $skill->id,
                         'name' => $skill->name,
-                        'sort_order' => $skill->sort_order,
+                        'sort_order' => (int) $skill->pivot->sort_order,
                     ])
                     ->values()
                     ->all()
+            ),
+            'linkedin_url' => $this->when(
+                $this->role === UserRole::JobSeeker,
+                $this->jobSeekerProfile?->linkedin_url,
             ),
             'educations' => $this->when(
                 $this->role === UserRole::JobSeeker,

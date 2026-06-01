@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\JobApplication;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -9,7 +10,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * Job fields stored on the application at submit time.
  *
- * @mixin \App\Models\JobApplication
+ * @mixin JobApplication
  */
 class ApplicationJobSnapshotResource extends JsonResource
 {

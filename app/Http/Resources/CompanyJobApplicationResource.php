@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\JobApplication;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -9,7 +10,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * One row in the company applicants dashboard (read-only listing).
  *
- * @mixin \App\Models\JobApplication
+ * @mixin JobApplication
  */
 class CompanyJobApplicationResource extends JsonResource
 {
@@ -18,21 +19,25 @@ class CompanyJobApplicationResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $applicant = $this->relationLoaded('applicant') ? $this->applicant : null;
+        $profile = $applicant?->jobSeekerProfile;
+        $posting = $this->relationLoaded('jobPosting') ? $this->jobPosting : null;
+
         return [
             'id' => $this->id,
             'job_posting_id' => $this->job_posting_id,
             'status' => $this->status->value,
             'submitted_at' => $this->formatDateTime($this->created_at),
             'user_id' => $this->user_id,
-            'job_title' => $this->job_title,
-            'name' => $this->applicant_name,
-            'email' => $this->applicant_email,
-            'phone' => $this->applicant_phone,
-            'linkedin' => $this->applicant_linkedin,
-            'cv_url' => $this->resource->cvPublicUrl(),
+            'job_title' => $posting?->title,
+            'name' => is_string($applicant?->full_name) ? trim($applicant->full_name) : null,
+            'email' => $applicant?->email,
+            'phone' => $applicant?->phone,
+            'linkedin' => $profile?->linkedin_url,
+            'cv_url' => $profile?->cvPublicUrl(),
             'seeker_profile' => $this->when(
-                $this->relationLoaded('applicant') && $this->applicant !== null,
-                fn (): array => (new UserResource($this->applicant))->resolve($request)
+                $applicant !== null,
+                fn (): array => (new UserResource($applicant))->resolve($request)
             ),
         ];
     }

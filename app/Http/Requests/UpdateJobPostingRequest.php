@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\JobPostingStatus;
 use App\Enums\JobWorkType;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -31,7 +33,7 @@ class UpdateJobPostingRequest extends FormRequest
     }
 
     /**
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -47,6 +49,7 @@ class UpdateJobPostingRequest extends FormRequest
             'category' => ['sometimes', 'nullable', 'string', 'max:255'],
             'skills' => ['sometimes', 'array', 'max:50'],
             'skills.*' => ['string', 'max:100'],
+            'status' => ['sometimes', Rule::enum(JobPostingStatus::class)],
         ];
     }
 }

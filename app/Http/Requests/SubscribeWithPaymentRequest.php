@@ -3,18 +3,20 @@
 namespace App\Http\Requests;
 
 use Closure;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SubscribeWithPaymentRequest extends FormRequest
 {
     private const SIMULATED_CARD_DIGIT_LENGTH = 16;
+
     public function authorize(): bool
     {
         return $this->user()?->isJobSeeker() ?? false;
     }
 
     /**
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {

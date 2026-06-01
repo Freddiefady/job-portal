@@ -11,12 +11,22 @@ use Illuminate\Http\Request;
 class JobRecommendationController extends Controller
 {
     /**
-     * Get AI-driven job recommendations for the authenticated job seeker.
+     * Get the cached AI recommendations from the database (instant load).
      */
-    public function index(Request $request, JobRecommendationService $service): JsonResponse
+    public function show(Request $request): JsonResponse
+    {
+        $profile = $request->user()->jobSeekerProfile;
+        $recommendations = $profile?->job_recommendation ?? [];
+
+        return ApiResponse::data($recommendations);
+    }
+
+    /**
+     * Generate new recommendations using Gemini AI, save them, and return.
+     */
+    public function generate(Request $request, JobRecommendationService $service): JsonResponse
     {
         $user = $request->user();
-
         $recommendations = $service->getRecommendationsForUser($user);
 
         $formatted = array_map(function ($item): array {
@@ -37,6 +47,6 @@ class JobRecommendationController extends Controller
         $profile->job_recommendation = $formatted;
         $profile->save();
 
-        return ApiResponse::data($formatted);
+        return ApiResponse::data($formatted, 201);
     }
 }

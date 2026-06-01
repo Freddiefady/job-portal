@@ -19,7 +19,7 @@ class CvCreationService
     {
         $user->load([
             'jobSeekerProfile:user_id,linkedin_url,summary,portfolio_url',
-            'skills:id,user_id,name',
+            'skills:id,name',
             'educations:id,user_id,institution,degree,field_of_study,starts_at,ends_at',
             'experiences:id,user_id,company_name,title,starts_at,ends_at,description',
             'certificates:id,user_id,name,issuer,issued_at',
@@ -57,7 +57,7 @@ class CvCreationService
 Generate a professional, polished CV based on the following user profile data:
 
 Personal Information:
-- Name: {$user->first_name} {$user->last_name}
+- Name: {$user->full_name}
 - Email: {$user->email}
 - Phone: {$user->phone}
 - Location: {$user->street}, {$user->city}
@@ -94,7 +94,7 @@ TEXT;
     {
         $user->loadMissing([
             'jobSeekerProfile:user_id,summary',
-            'skills:id,user_id',
+            'skills:id',
             'educations:id,user_id',
             'experiences:id,user_id',
         ]);
@@ -163,7 +163,7 @@ TEXT;
 <html>
 <head>
     <meta charset="utf-8">
-    <title>CV - {$user->first_name} {$user->last_name}</title>
+    <title>CV - {$user->full_name}</title>
     <style>
         body {
             font-family: 'Georgia', 'Times New Roman', serif;

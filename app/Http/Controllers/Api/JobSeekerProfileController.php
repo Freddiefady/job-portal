@@ -20,7 +20,7 @@ class JobSeekerProfileController extends Controller
     private const string CV_DISK = 'public';
 
     /** @var list<string> */
-    private const SCALAR_USER_KEYS = ['phone', 'city', 'street'];
+    private const SCALAR_USER_KEYS = ['full_name', 'phone', 'city', 'street'];
 
     /** @var list<string> */
     private const SCALAR_PROFILE_KEYS = ['gender', 'disability_type', 'linkedin_url', 'portfolio_url', 'summary'];
@@ -46,8 +46,6 @@ class JobSeekerProfileController extends Controller
                 $profile = $user->jobSeekerProfile()->firstOrCreate(
                     ['user_id' => $user->id],
                     [
-                        'first_name' => null,
-                        'last_name' => null,
                         'full_name' => null,
                         'cv_path' => null,
                         'gender' => null,
@@ -70,42 +68,10 @@ class JobSeekerProfileController extends Controller
                     }
                 }
 
-                if (\array_key_exists('full_name', $validated)) {
-                    [$first, $last] = $this->splitFullName((string) $validated['full_name']);
-                    $profile->first_name = $first !== '' ? $first : null;
-                    $profile->last_name = $last;
-                    $profile->full_name = $validated['full_name'];
-                } elseif (
-                    \array_key_exists('first_name', $validated)
-                    || \array_key_exists('last_name', $validated)
-                ) {
-                    $first = \array_key_exists('first_name', $validated)
-                        ? $validated['first_name']
-                        : $profile->first_name;
-                    $last = \array_key_exists('last_name', $validated)
-                        ? $validated['last_name']
-                        : $profile->last_name;
-                    $profile->first_name = is_string($first) && $first !== '' ? $first : null;
-                    $profile->last_name = is_string($last) && $last !== '' ? $last : null;
-                    $profile->full_name = $this->composeFullName($profile->first_name, $profile->last_name);
-                }
-
                 if (\array_key_exists('skills', $validated)) {
-                    $user->skills()->delete();
-                    $seen = [];
-                    $order = 0;
-                    foreach ($this->normalizeSkillNames(is_array($validated['skills']) ? $validated['skills'] : []) as $trimmed) {
-                        $key = mb_strtolower($trimmed);
-                        if (isset($seen[$key])) {
-                            continue;
-                        }
-                        $seen[$key] = true;
-                        $user->skills()->create([
-                            'name' => $trimmed,
-                            'sort_order' => $order,
-                        ]);
-                        $order++;
-                    }
+                    $user->syncSkillsFromNames(
+                        is_array($validated['skills']) ? $validated['skills'] : [],
+                    );
                 }
 
                 if (\array_key_exists('educations', $validated)) {
@@ -218,57 +184,5 @@ class JobSeekerProfileController extends Controller
         return ApiResponse::data(
             (new UserResource($user))->resolve($request),
         );
-    }
-
-    /**
-     * @return array{0: string, 1: string|null}
-     */
-    private function splitFullName(string $fullName): array
-    {
-        $fullName = trim($fullName);
-        $parts = preg_split('/\s+/', $fullName, 2);
-
-        $first = $parts[0] ?? '';
-        $last = isset($parts[1]) ? trim($parts[1]) : null;
-        if ($last === '') {
-            $last = null;
-        }
-
-        return [$first, $last];
-    }
-
-    private function composeFullName(?string $first, ?string $last): ?string
-    {
-        $parts = array_values(array_filter(
-            [$first, $last],
-            fn (?string $p): bool => $p !== null && $p !== '',
-        ));
-
-        if ($parts === []) {
-            return null;
-        }
-
-        return implode(' ', $parts);
-    }
-
-    /**
-     * @param  array<int, mixed>  $skills
-     * @return list<string>
-     */
-    private function normalizeSkillNames(array $skills): array
-    {
-        $out = [];
-        foreach ($skills as $s) {
-            if (! is_string($s)) {
-                continue;
-            }
-            $t = mb_substr(trim($s), 0, 100);
-            if ($t === '') {
-                continue;
-            }
-            $out[] = $t;
-        }
-
-        return $out;
     }
 }

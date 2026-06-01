@@ -99,7 +99,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::patch('/profile', [JobSeekerProfileController::class, 'update']);
             Route::post('/profile/cv', [CvCreationController::class, 'generate']);
             Route::get('/profile/cv/download', [CvCreationController::class, 'download']);
-            Route::get('/recommendations/jobs', [JobRecommendationController::class, 'index']);
+            Route::get('/recommendations/jobs', [JobRecommendationController::class, 'show']);
+            Route::post('/recommendations/jobs', [JobRecommendationController::class, 'generate']);
             Route::delete('/profile', [AccountDeletionController::class, 'destroy']);
             Route::get('/applications', [JobSeekerJobApplicationController::class, 'index']);
             Route::post('/job-postings/{job_posting}/applications', [JobSeekerJobApplicationController::class, 'store']);

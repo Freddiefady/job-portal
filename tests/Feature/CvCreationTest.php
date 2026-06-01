@@ -81,7 +81,7 @@ class CvCreationTest extends TestCase
 
         $response = $this->postJson('/api/profile/cv');
 
-        $response->assertStatus(200);
+        $response->assertStatus(201);
         $response->assertJson([
             'data' => [
                 'cv' => '### Simulated AI CV Content',

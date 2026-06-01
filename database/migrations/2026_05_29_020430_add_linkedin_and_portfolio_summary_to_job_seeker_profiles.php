@@ -8,13 +8,11 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * linkedin_url, summary, portfolio_link
      */
     public function up(): void
     {
         Schema::table('job_seeker_profiles', function (Blueprint $table) {
-            $table->string('linkedin_url')->nullable()->after('disability_type');
-            $table->string('portfolio_url')->nullable()->after('linkedin_url');
+            $table->string('portfolio_url')->nullable()->after('disability_type');
             $table->text('summary')->nullable()->after('portfolio_url');
         });
     }
@@ -25,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('job_seeker_profiles', function (Blueprint $table) {
-            $table->dropColumn(['linkedin_url', 'portfolio_url', 'summary']);
+            $table->dropColumn(['portfolio_url', 'summary']);
         });
     }
 };

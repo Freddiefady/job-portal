@@ -2,12 +2,13 @@
 
 namespace App\Http\Resources;
 
+use App\Models\JobPosting;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Models\JobPosting
+ * @mixin JobPosting
  */
 class JobPostingResource extends JsonResource
 {
@@ -22,6 +23,7 @@ class JobPostingResource extends JsonResource
     public function toArray(Request $request): array
     {
         $body = [
+            'id' => $this->id,
             'title' => $this->title,
             'company_name' => $this->user?->companyProfile?->company_name,
             'company_profile_photo_url' => $this->user?->profilePhotoPublicUrl(),
@@ -32,6 +34,7 @@ class JobPostingResource extends JsonResource
             'qualification' => $this->qualification,
             'location' => $this->location,
             'type' => $this->type->value,
+            'status' => $this->status->value,
             'approved_disability' => array_values($this->approved_disability ?? []),
             'category' => $this->category,
             'skills' => array_values($this->skills ?? []),
@@ -41,14 +44,12 @@ class JobPostingResource extends JsonResource
 
         if ($this->includeOwnerId) {
             return [
-                'id' => $this->id,
                 'user_id' => $this->user_id,
                 ...$body,
             ];
         }
 
         return [
-            'id' => $this->id,
             ...$body,
         ];
     }

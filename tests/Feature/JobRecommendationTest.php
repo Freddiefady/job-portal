@@ -19,7 +19,7 @@ class JobRecommendationTest extends TestCase
      */
     public function test_job_recommendations_require_authentication(): void
     {
-        $response = $this->getJson('/api/recommendations/jobs');
+        $response = $this->postJson('/api/recommendations/jobs');
 
         $response->assertStatus(401);
     }
@@ -33,15 +33,15 @@ class JobRecommendationTest extends TestCase
 
         Sanctum::actingAs($user);
 
-        $response = $this->getJson('/api/recommendations/jobs');
+        $response = $this->postJson('/api/recommendations/jobs');
 
         $response->assertStatus(403);
     }
 
     /**
-     * Test that recommendations are returned successfully.
+     * Test that recommendations are generated successfully via POST.
      */
-    public function test_job_seeker_can_fetch_job_recommendations_successfully(): void
+    public function test_job_seeker_can_generate_job_recommendations_successfully(): void
     {
         $user = User::factory()->jobSeeker()->create();
 
@@ -108,9 +108,9 @@ class JobRecommendationTest extends TestCase
             ],
         ]);
 
-        $response = $this->getJson('/api/recommendations/jobs');
+        $response = $this->postJson('/api/recommendations/jobs');
 
-        $response->assertStatus(200);
+        $response->assertStatus(201);
         $response->assertJsonStructure([
             'data' => [
                 '*' => [
@@ -133,5 +133,40 @@ class JobRecommendationTest extends TestCase
         ]);
 
         JobRecommender::assertPrompted(fn ($prompt) => $prompt->contains('Laravel Backend Developer'));
+    }
+
+    /**
+     * Test that cached recommendations can be fetched successfully via GET.
+     */
+    public function test_job_seeker_can_fetch_cached_recommendations_successfully(): void
+    {
+        $user = User::factory()->jobSeeker()->create();
+        $profile = $user->jobSeekerProfile()->firstOrCreate(['user_id' => $user->id]);
+        $profile->job_recommendation = [
+            [
+                'job_posting_id' => 999,
+                'title' => 'Mock Job',
+                'location' => 'Cairo',
+                'type' => 'fulltime',
+                'category' => 'Engineering',
+                'matching_reason' => 'Cached matching reason.',
+                'match_percentage' => 90,
+            ],
+        ];
+        $profile->save();
+
+        $user->refresh();
+
+        Sanctum::actingAs($user);
+
+        $response = $this->getJson('/api/recommendations/jobs');
+
+        $response->assertStatus(200);
+        $response->assertJsonFragment([
+            'job_posting_id' => 999,
+            'title' => 'Mock Job',
+            'matching_reason' => 'Cached matching reason.',
+            'match_percentage' => 90,
+        ]);
     }
 }

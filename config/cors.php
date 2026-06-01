@@ -20,8 +20,6 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://jobs-ten-sigma.vercel.app',
-        'https://jobs-dashboard-ten.vercel.app',
         'http://localhost:5173',
     ],
 

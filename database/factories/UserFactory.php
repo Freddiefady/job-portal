@@ -36,28 +36,22 @@ class UserFactory extends Factory
 
             if ($user->isJobSeeker()) {
                 if ($user->jobSeekerProfile === null) {
-                    $first = fake()->firstName();
-                    $last = fake()->lastName();
                     $user->jobSeekerProfile()->create([
-                        'first_name' => $first,
-                        'last_name' => $last,
-                        'full_name' => $first.' '.$last,
                         'cv_path' => null,
                         'gender' => fake()->optional(0.7)->randomElement(['male', 'female', 'other']),
                         'disability_type' => null,
                     ]);
                 }
 
+                if ($user->full_name === null || $user->full_name === '') {
+                    $user->update(['full_name' => fake()->name()]);
+                }
+
                 if ($user->skills()->exists()) {
                     return;
                 }
 
-                foreach (['Laravel', 'PHP', 'MySQL'] as $index => $skill) {
-                    $user->skills()->create([
-                        'name' => $skill,
-                        'sort_order' => $index,
-                    ]);
-                }
+                $user->syncSkillsFromNames(['Laravel', 'PHP', 'MySQL']);
 
                 return;
             }
@@ -80,6 +74,7 @@ class UserFactory extends Factory
             'phone' => fake()->unique()->e164PhoneNumber(),
             'role' => UserRole::JobSeeker,
             'status' => 'active',
+            'full_name' => fake()->name(),
             'city' => fake()->optional(0.8)->city(),
             'street' => fake()->optional(0.5)->streetAddress(),
             'profile_photo_path' => null,
@@ -117,8 +112,7 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'role' => UserRole::Admin,
-            'first_name' => fake()->firstName(),
-            'last_name' => fake()->lastName(),
+            'full_name' => fake()->name(),
         ]);
     }
 
@@ -126,10 +120,7 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'role' => UserRole::Admin,
-            'first_name' => fake()->firstName(),
-            'last_name' => fake()->lastName(),
-        ])->afterCreating(function (User $user): void {
-            $user->admin?->update(['is_super_admin' => true]);
-        });
+            'full_name' => fake()->name(),
+        ]);
     }
 }

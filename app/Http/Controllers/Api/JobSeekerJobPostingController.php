@@ -8,6 +8,7 @@ use App\Http\Requests\IndexPublicJobPostingsRequest;
 use App\Http\Resources\JobPostingResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\JobPosting;
+use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -169,7 +170,7 @@ class JobSeekerJobPostingController extends Controller
 
     private static function connectionDriver(Builder $query): string
     {
-        /** @var \Illuminate\Database\Connection $connection */
+        /** @var Connection $connection */
         $connection = $query->getConnection();
 
         return $connection->getDriverName();

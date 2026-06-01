@@ -2,12 +2,13 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Subscription;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Models\Subscription
+ * @mixin Subscription
  */
 class SubscriptionResource extends JsonResource
 {
@@ -48,8 +49,7 @@ class SubscriptionResource extends JsonResource
             $body['user'] = [
                 'id' => $this->user->id,
                 'email' => $this->user->email,
-                'first_name' => $this->user->first_name,
-                'last_name' => $this->user->last_name,
+                'full_name' => $this->user->full_name,
             ];
         }
 

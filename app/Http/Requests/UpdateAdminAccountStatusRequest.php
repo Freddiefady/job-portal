@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\In;
 
 class UpdateAdminAccountStatusRequest extends FormRequest
 {
@@ -13,7 +14,7 @@ class UpdateAdminAccountStatusRequest extends FormRequest
     }
 
     /**
-     * @return array<string, list<string|\Illuminate\Validation\Rules\In>>
+     * @return array<string, list<string|In>>
      */
     public function rules(): array
     {

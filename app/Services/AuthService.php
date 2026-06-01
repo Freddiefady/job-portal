@@ -33,38 +33,21 @@ class AuthService
             'email_verified_at' => now(),
         ];
 
+        if ($role === UserRole::JobSeeker) {
+            $userData['full_name'] = $data['full_name'];
+        }
+
         return DB::transaction(function () use ($role, $data, $userData): array {
             $user = $this->users->create($userData);
 
             if ($role === UserRole::JobSeeker) {
-                [$first, $last] = $this->splitFullName($data['full_name']);
                 $user->jobSeekerProfile()->create([
-                    'first_name' => $first,
-                    'last_name' => $last,
-                    'full_name' => $data['full_name'],
                     'cv_path' => $data['cv_path'] ?? null,
                     'gender' => null,
                     'disability_type' => null,
                 ]);
 
-                $seen = [];
-                $order = 0;
-                foreach ($this->normalizeSkills($data['skills']) as $name) {
-                    $trimmed = mb_substr(trim($name), 0, 100);
-                    if ($trimmed === '') {
-                        continue;
-                    }
-                    $key = mb_strtolower($trimmed);
-                    if (isset($seen[$key])) {
-                        continue;
-                    }
-                    $seen[$key] = true;
-                    $user->skills()->create([
-                        'name' => $trimmed,
-                        'sort_order' => $order,
-                    ]);
-                    $order++;
-                }
+                $user->syncSkillsFromNames($this->normalizeSkills($data['skills']));
                 $user->unsetRelation('skills');
             }
 
@@ -84,23 +67,6 @@ class AuthService
     }
 
     /**
-     * @return array{0: string, 1: string|null}
-     */
-    private function splitFullName(string $fullName): array
-    {
-        $fullName = trim($fullName);
-        $parts = preg_split('/\s+/', $fullName, 2);
-
-        $first = $parts[0] ?? '';
-        $last = isset($parts[1]) ? trim($parts[1]) : null;
-        if ($last === '') {
-            $last = null;
-        }
-
-        return [$first, $last];
-    }
-
-    /**
      * @param  list<string>  $skills
      * @return list<string>
      */
@@ -115,7 +81,7 @@ class AuthService
     /**
      * @return array{user: User, token: string}|array{disabled: true}|null
      */
-    public function attemptLogin(string $email, string $password): array|null
+    public function attemptLogin(string $email, string $password): ?array
     {
         $user = $this->users->findByEmail($email);
         if (! $user || ! Hash::check($password, $user->getAuthPassword())) {
@@ -141,7 +107,7 @@ class AuthService
      *
      * @return array{user: User, token: string}|array{disabled: true}|null
      */
-    public function attemptAdminLogin(string $email, string $password): array|null
+    public function attemptAdminLogin(string $email, string $password): ?array
     {
         $user = $this->users->findByEmail($email);
         if (! $user || ! Hash::check($password, $user->getAuthPassword())) {

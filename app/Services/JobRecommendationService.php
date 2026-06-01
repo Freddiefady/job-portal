@@ -23,7 +23,7 @@ class JobRecommendationService
         // 1. Load user profile details
         $user->loadMissing([
             'jobSeekerProfile:user_id,summary,linkedin_url,portfolio_url',
-            'skills:id,user_id,name',
+            'skills:id,name',
             'educations:id,user_id,institution,degree,field_of_study,starts_at,ends_at',
             'experiences:id,user_id,company_name,title,starts_at,ends_at,description',
             'certificates:id,user_id,name,issuer,issued_at',
