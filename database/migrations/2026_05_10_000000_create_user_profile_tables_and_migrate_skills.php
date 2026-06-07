@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('name', 100);
             $table->unsignedSmallInteger('sort_order')->default(0);
             $table->timestamps();
-
             $table->unique(['user_id', 'name']);
             $table->index('user_id');
         });

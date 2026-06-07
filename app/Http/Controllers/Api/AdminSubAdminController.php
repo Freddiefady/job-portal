@@ -183,4 +183,24 @@ class AdminSubAdminController extends Controller
 
         return $activeSupers === 1;
     }
+
+    public function destroy(User $user): JsonResponse
+{
+    if (! $user->isAdmin()) {
+        return ApiResponse::message('Not found.', 404);
+    }
+
+    if ($this->isOnlyActiveSuperAdmin($user)) {
+        return ApiResponse::message(
+            'You cannot delete the only active super admin.',
+            422
+        );
+    }
+
+    $user->tokens()->delete();
+
+    $user->delete();
+
+    return ApiResponse::message('Admin deleted successfully.');
+}
 }
