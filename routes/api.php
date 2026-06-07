@@ -147,6 +147,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::patch('/admin/admins/{user}', [AdminSubAdminController::class, 'update']);
             Route::post('/admin/admins/{user}/activate', [AdminSubAdminController::class, 'activate']);
             Route::post('/admin/admins/{user}/deactivate', [AdminSubAdminController::class, 'deactivate']);
+            Route::delete('/admin/admins/{user}', [AdminSubAdminController::class, 'destroy']);
         });
     });
 });
