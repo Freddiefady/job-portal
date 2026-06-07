@@ -19,20 +19,22 @@ class ApplicationJobSnapshotResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $posting = $this->jobPosting;
+
         return [
-            'title' => $this->job_title,
+            'title' => $posting?->title,
             'company_name' => $this->resolveCompanyName(),
             'company_profile_photo_url' => $this->resolveCompanyProfilePhotoUrl(),
             'company_industry' => $this->resolveCompanyIndustry(),
             'company_size' => $this->resolveCompanySize(),
-            'description' => $this->job_description,
-            'requirements' => $this->job_requirements,
-            'qualification' => $this->job_qualification,
-            'location' => $this->job_location,
-            'type' => $this->job_type,
-            'approved_disability' => array_values($this->job_approved_disability ?? []),
-            'category' => $this->job_category,
-            'skills' => array_values($this->job_skills ?? []),
+            'description' => $posting?->description,
+            'requirements' => $posting?->requirements,
+            'qualification' => $posting?->qualification,
+            'location' => $posting?->location,
+            'type' => $posting?->type?->value,
+            'approved_disability' => $posting && $posting->disabilities ? $posting->disabilities->pluck('name')->all() : [],
+            'category' => $posting?->category,
+            'skills' => $posting && $posting->skills ? $posting->skills->pluck('name')->all() : [],
         ];
     }
 

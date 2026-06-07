@@ -30,17 +30,18 @@ class JobRecommendationService
         ]);
 
         // 2. Fetch visible job postings from database
-        $jobs = JobPosting::visibleToPublic()->get([
-            'id',
-            'title',
-            'description',
-            'requirements',
-            'qualification',
-            'location',
-            'type',
-            'category',
-            'skills',
-        ]);
+        $jobs = JobPosting::visibleToPublic()
+            ->with('skills')
+            ->get([
+                'id',
+                'title',
+                'description',
+                'requirements',
+                'qualification',
+                'location',
+                'type',
+                'category',
+            ]);
 
         if ($jobs->isEmpty()) {
             return [];
@@ -88,7 +89,7 @@ TEXT;
                 'description' => $job->description,
                 'requirements' => $job->requirements,
                 'qualification' => $job->qualification,
-                'skills' => is_array($job->skills) ? implode(', ', $job->skills) : $job->skills,
+                'skills' => $job->skills->pluck('name')->implode(', '),
             ];
         })->toArray();
 

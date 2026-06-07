@@ -8,7 +8,6 @@ use App\Http\Requests\IndexPublicJobPostingsRequest;
 use App\Http\Resources\JobPostingResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\JobPosting;
-use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,6 +34,8 @@ class JobSeekerJobPostingController extends Controller
                     $q->select('id', 'email', 'profile_photo_path');
                 },
                 'user.companyProfile',
+                'skills',
+                'disabilities',
             ])
             ->latest()
             ->paginate(self::PER_PAGE);
@@ -117,22 +118,18 @@ class JobSeekerJobPostingController extends Controller
                     $profileQuery->whereRaw('LOWER(industry) LIKE ?', [$like]);
                 });
 
-            $driver = self::connectionDriver($inner);
-            $cast = $driver === 'sqlite' ? 'TEXT' : 'CHAR';
-            $inner->orWhereRaw(
-                'LOWER(CAST(approved_disability AS '.$cast.')) LIKE ?',
-                [$like],
-            );
+            $inner->orWhereHas('disabilities', static function (Builder $q) use ($like): void {
+                $q->whereRaw('LOWER(name) LIKE ?', [$like]);
+            });
 
             $inner->orWhereRaw(
                 'LOWER(COALESCE('.$inner->qualifyColumn('category').", '')) LIKE ?",
                 [$like],
             );
 
-            $inner->orWhereRaw(
-                'LOWER(CAST('.$inner->qualifyColumn('skills').' AS '.$cast.')) LIKE ?',
-                [$like],
-            );
+            $inner->orWhereHas('skills', static function (Builder $q) use ($like): void {
+                $q->whereRaw('LOWER(name) LIKE ?', [$like]);
+            });
         });
     }
 
@@ -140,15 +137,8 @@ class JobSeekerJobPostingController extends Controller
     {
         $like = '%'.addcslashes(mb_strtolower($needle), '\\%_').'%';
 
-        $query->where(function (Builder $inner) use ($needle, $like): void {
-            $inner->whereJsonContains('skills', $needle);
-
-            $driver = self::connectionDriver($inner);
-            $cast = $driver === 'sqlite' ? 'TEXT' : 'CHAR';
-            $inner->orWhereRaw(
-                'LOWER(CAST('.$inner->qualifyColumn('skills').' AS '.$cast.')) LIKE ?',
-                [$like],
-            );
+        $query->whereHas('skills', static function (Builder $q) use ($like): void {
+            $q->whereRaw('LOWER(name) LIKE ?', [$like]);
         });
     }
 
@@ -156,24 +146,9 @@ class JobSeekerJobPostingController extends Controller
     {
         $like = '%'.addcslashes(mb_strtolower($needle), '\\%_').'%';
 
-        $query->where(function (Builder $inner) use ($needle, $like): void {
-            $inner->whereJsonContains('approved_disability', $needle);
-
-            $driver = self::connectionDriver($inner);
-            $cast = $driver === 'sqlite' ? 'TEXT' : 'CHAR';
-            $inner->orWhereRaw(
-                'LOWER(CAST(approved_disability AS '.$cast.')) LIKE ?',
-                [$like],
-            );
+        $query->whereHas('disabilities', static function (Builder $q) use ($like): void {
+            $q->whereRaw('LOWER(name) LIKE ?', [$like]);
         });
-    }
-
-    private static function connectionDriver(Builder $query): string
-    {
-        /** @var Connection $connection */
-        $connection = $query->getConnection();
-
-        return $connection->getDriverName();
     }
 
     public function show(Request $request, JobPosting $jobPosting): JsonResponse
@@ -192,6 +167,8 @@ class JobSeekerJobPostingController extends Controller
                 $q->select('id', 'email', 'profile_photo_path');
             },
             'user.companyProfile',
+            'skills',
+            'disabilities',
         ]);
 
         return ApiResponse::data(

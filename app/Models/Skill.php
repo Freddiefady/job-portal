@@ -18,4 +18,13 @@ class Skill extends Model
             ->withPivot('sort_order')
             ->withTimestamps();
     }
+
+    /**
+     * @return BelongsToMany<JobPosting, $this>
+     */
+    public function jobPostings(): BelongsToMany
+    {
+        return $this->belongsToMany(JobPosting::class, 'job_skills', 'skill_id', 'job_posting_id')
+            ->withTimestamps();
+    }
 }

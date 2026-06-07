@@ -78,8 +78,8 @@ class JobRecommendationTest extends TestCase
             'location' => 'Cairo',
             'type' => JobWorkType::Fulltime,
             'category' => 'Engineering',
-            'skills' => ['Laravel', 'PHP', 'MySQL'],
         ]);
+        $job1->syncSkills(['Laravel', 'PHP', 'MySQL']);
 
         $job2 = JobPosting::create([
             'user_id' => $company->id,
@@ -90,8 +90,8 @@ class JobRecommendationTest extends TestCase
             'location' => 'Cairo',
             'type' => JobWorkType::Fulltime,
             'category' => 'Engineering',
-            'skills' => ['Angular', 'TypeScript'],
         ]);
+        $job2->syncSkills(['Angular', 'TypeScript']);
 
         Sanctum::actingAs($user);
 

@@ -49,6 +49,8 @@ class CompanyJobPostingController extends Controller
                     $q->select('id', 'email', 'profile_photo_path');
                 },
                 'user.companyProfile',
+                'skills',
+                'disabilities',
             ])
             ->latest()
             ->get();
@@ -63,13 +65,22 @@ class CompanyJobPostingController extends Controller
 
     public function store(StoreJobPostingRequest $request): JsonResponse
     {
-        $posting = $request->user()->jobPostings()->create($request->validated());
+        $validated = $request->validated();
+        $skills = $validated['skills'] ?? [];
+        $disabilities = $validated['approved_disability'] ?? [];
+        unset($validated['skills'], $validated['approved_disability']);
+
+        $posting = $request->user()->jobPostings()->create($validated);
+        $posting->syncSkills($skills);
+        $posting->syncDisabilities($disabilities);
 
         $posting->load([
             'user' => static function ($q): void {
                 $q->select('id', 'email', 'profile_photo_path');
             },
             'user.companyProfile',
+            'skills',
+            'disabilities',
         ]);
 
         return ApiResponse::data(
@@ -87,6 +98,8 @@ class CompanyJobPostingController extends Controller
                 $q->select('id', 'email', 'profile_photo_path');
             },
             'user.companyProfile',
+            'skills',
+            'disabilities',
         ]);
 
         return ApiResponse::data(
@@ -132,13 +145,29 @@ class CompanyJobPostingController extends Controller
     {
         $this->ensureOwnedByUser($request, $jobPosting);
 
-        $jobPosting->update($request->validated());
+        $validated = $request->validated();
+        $hasSkills = array_key_exists('skills', $validated);
+        $skills = $validated['skills'] ?? [];
+        $hasDisabilities = array_key_exists('approved_disability', $validated);
+        $disabilities = $validated['approved_disability'] ?? [];
+        unset($validated['skills'], $validated['approved_disability']);
+
+        $jobPosting->update($validated);
+
+        if ($hasSkills) {
+            $jobPosting->syncSkills($skills);
+        }
+        if ($hasDisabilities) {
+            $jobPosting->syncDisabilities($disabilities);
+        }
 
         $jobPosting = $jobPosting->fresh()->load([
             'user' => static function ($q): void {
                 $q->select('id', 'email', 'profile_photo_path');
             },
             'user.companyProfile',
+            'skills',
+            'disabilities',
         ]);
 
         return ApiResponse::data(
